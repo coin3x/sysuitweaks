@@ -112,6 +112,17 @@ public class QuickStatusBarHeaderBatteryHook {
                 updateColorsM.invoke(BatteryMeterViewHolder.get(param.thisObject).get(), Color.WHITE, 0xFFD4D4D4, Color.WHITE);
             }
         });
+
+        // Increase touch target of auto brightness toggle
+        XposedHelpers.findAndHookMethod("com.android.systemui.qs.QSPanel", lpparam.classLoader, "addViewsAboveTiles", new XC_MethodHook() {
+            @Override
+            protected void afterHookedMethod(MethodHookParam param) throws Throwable {
+                LinearLayout panel = (LinearLayout) param.thisObject;
+                int iconId = panel.getResources().getIdentifier("brightness_icon", "id", "com.android.systemui");
+                View icon = panel.findViewById(iconId);
+                icon.setPadding(24, 24, 24, 24);
+            }
+        });
     }
 
     private LinearLayout createBatteryMeter(Context ctx) throws Throwable {
