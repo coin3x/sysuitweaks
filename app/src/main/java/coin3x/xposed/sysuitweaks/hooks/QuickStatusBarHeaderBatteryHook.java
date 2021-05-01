@@ -96,6 +96,7 @@ public class QuickStatusBarHeaderBatteryHook {
         textAppearanceF.set(instance, clockTextAppearance);
         instance.setPadding(24, 0, 0, 0);
         setPercentModeM.invoke(instance, 3 /* MODE_ESTIMATE */);
+        instance.setLayoutDirection(View.LAYOUT_DIRECTION_RTL);
         return instance;
     }
 }
