@@ -1,6 +1,7 @@
 package coin3x.xposed.sysuitweaks.hooks;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.util.AttributeSet;
 import android.view.View;
@@ -26,7 +27,11 @@ public class QuickStatusBarHeaderBatteryHook {
     // WeakHashMap<QuickStatusBarHeader, WeakReference<BatteryMeterView>>
     WeakHashMap<Object, WeakReference<Object>> BatteryMeterViewHolder = new WeakHashMap<>();
 
+    Class CActivityStarter;
+    Method postStartActivityDismissingKeyguardM;
+
     Class CQuickStatusBarHeader;
+    Field mActivityStarterF;
     Method getContextM;
 
     Class CBatteryMeterView;
@@ -38,7 +43,12 @@ public class QuickStatusBarHeaderBatteryHook {
     Method unsubscribeFromTunerUpdatesM;
 
     public QuickStatusBarHeaderBatteryHook(XC_LoadPackage.LoadPackageParam lpparam) throws Throwable {
+        CActivityStarter = XposedHelpers.findClass("com.android.systemui.plugins.ActivityStarter", lpparam.classLoader);
+        postStartActivityDismissingKeyguardM = CActivityStarter.getDeclaredMethod("postStartActivityDismissingKeyguard", Intent.class, int.class);
+
         CQuickStatusBarHeader = XposedHelpers.findClass("com.android.systemui.qs.QuickStatusBarHeader", lpparam.classLoader);
+        mActivityStarterF = CQuickStatusBarHeader.getDeclaredField("mActivityStarter");
+        mActivityStarterF.setAccessible(true);
         getContextM = CQuickStatusBarHeader.getMethod("getContext");
 
         CBatteryMeterView = XposedHelpers.findClass("com.android.systemui.BatteryMeterView", lpparam.classLoader);
@@ -61,6 +71,15 @@ public class QuickStatusBarHeaderBatteryHook {
                 Context ctx = (Context) getContextM.invoke(header);
                 int parentId = ctx.getResources().getIdentifier("quick_status_bar_system_icons", "id", "com.android.systemui");
                 LinearLayout batteryMeter = createBatteryMeter(ctx);
+
+                Object starter = mActivityStarterF.get(header);
+                batteryMeter.setOnClickListener((View v) -> {
+                    try {
+                        postStartActivityDismissingKeyguardM.invoke(starter, new Intent(Intent.ACTION_POWER_USAGE_SUMMARY), 0);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                });
                 LinearLayout parent = header.findViewById(parentId);
                 if (parent.getChildCount() != 3) {
                     throw new IllegalStateException("unexpected child count: " + parent.getChildCount());
