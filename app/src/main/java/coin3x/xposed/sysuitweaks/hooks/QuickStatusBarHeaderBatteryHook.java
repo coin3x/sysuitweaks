@@ -23,7 +23,7 @@ public class QuickStatusBarHeaderBatteryHook {
     private QuickStatusBarHeaderBatteryHook() {
     }
 
-    // WeakHashMap<QuickStatusBarHeader, WeakReference<BatterMeterView>>
+    // WeakHashMap<QuickStatusBarHeader, WeakReference<BatteryMeterView>>
     WeakHashMap<Object, WeakReference<Object>> BatteryMeterViewHolder = new WeakHashMap<>();
 
     Class CQuickStatusBarHeader;
@@ -78,6 +78,11 @@ public class QuickStatusBarHeaderBatteryHook {
                 mIgnoreTunerUpdatesF.set(origBattery, true);
                 unsubscribeFromTunerUpdatesM.invoke(origBattery);
                 origBattery.setVisibility(View.GONE);
+
+                // Remove excess padding
+                int statusIconsId = ctx.getResources().getIdentifier("statusIcons", "id", "com.android.systemui");
+                LinearLayout statusIcons = header.findViewById(statusIconsId);
+                statusIcons.setPadding(0, 0, 0, 0);
             }
         });
 
